@@ -1,38 +1,34 @@
-import React, {useState} from 'react';
-import {View, StyleSheet, Alert} from 'react-native';
+import React, {useState, useContext} from 'react';
+import {View, StyleSheet, Alert, ActivityIndicator} from 'react-native';
 import {Text, Input, Icon, Button} from 'react-native-elements';
-import { LoginService } from '../../services/loginService';
+import {AutenticacaoContext} from '../../context/AutenticacaoContext';
+import Carregamento from '../../components/Carregamento';
+import App from '../../App';
 
 const Login = ({navigation}) => {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const {login} = useContext(AutenticacaoContext);
+  const [visible, setVisible] = useState(false);
 
-  const handleLogin = async (email:string, senha:string) => {
+  const handleLogin = async (email: string, senha: string) => {
     console.log(`Email: ${email} - Senha: ${senha}`);
-    const respostaLogin = await LoginService (email, senha);
-    if(!respostaLogin){
-      Alert.alert(
-        "Erro",
-        "",
-        [
-          { text:  "Ok"},
-          { text: "Não foi possivel realizar o login."},
-        ]
-      );
-    }else{
-      navigation.navigate('HomeScreen',{
-        screen:'TabNavigationScreen', 
-        params: {
-          screen: 'HomeTabScreen',
-          params:{
-            token: respostaLogin.token,
-          }
-        },
-      } );
+    setVisible(true);
+      
+
+    const respostaLogin = await login(email, senha);
+    if (!respostaLogin) {
+      setVisible(false);
+      Alert.alert('Erro', '', [
+        {text: 'Ok'},
+        {text: 'Não foi possivel realizar o login.'},
+      ]);
+    } else {
+      setVisible(false);
+      navigation.navigate('HomeScreen');
     }
   };
 
-  
   return (
     <View style={styles.container}>
       <Text style={styles.texto_entrada}>{'Bem-vindo ao mundo Pet'}</Text>
@@ -55,14 +51,16 @@ const Login = ({navigation}) => {
         }
         inputStyle={styles.inputs}
         placeholderTextColor={'pink'}
+        secureTextEntry
       />
-      
+
       <Button
         title="Entrar"
         onPress={() => handleLogin(email, senha)}
         titleStyle={styles.titulobotao}
         buttonStyle={styles.botaostyle}
       />
+      <Carregamento visible={visible} />
     </View>
   );
 };
@@ -87,7 +85,7 @@ const styles = StyleSheet.create({
   titulobotao: {
     color: '#0d0d0e',
     margin: 5,
-    fontSize:25
+    fontSize: 25,
   },
   botaostyle: {
     backgroundColor: 'pink',
